@@ -87,9 +87,10 @@ modules must register these components when they are imported: see the
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Optional
 
 import pint
+import xarray as xr
 
 from virtual_rainforest.core.axes import AXIS_VALIDATORS
 from virtual_rainforest.core.config import Config
@@ -159,6 +160,8 @@ class BaseModel(ABC):
         self,
         data: Data,
         update_interval: pint.Quantity,
+        static: bool = False,
+        static_data: Optional[xr.Dataset] = None,
         **kwargs: Any,
     ):
         """Performs core initialisation for BaseModel subclasses.
@@ -180,6 +183,10 @@ class BaseModel(ABC):
         """The time interval between model updates."""
         self._repr = ["update_interval"]
         """A list of attributes to be included in the class __repr__ output"""
+        self._static = static
+        """Flag indicating if the model is static, i.e. does not change with time."""
+        self._static_data = static_data
+        """Pre-set data for the whole simulation provided as input."""
 
         # Check the required init variables
         self.check_init_data()
@@ -192,9 +199,57 @@ class BaseModel(ABC):
     def spinup(self) -> None:
         """Function to spin up the model."""
 
-    @abstractmethod
     def update(self, time_index: int, **kwargs: Any) -> None:
         """Function to update the model.
+
+        Args:
+            time_index: The index representing the current time step in the data object.
+        """
+        if not self._static:
+            self._update(time_index, **kwargs)
+            return
+
+        self._update_static(time_index, **kwargs)
+
+    @abstractmethod
+    def _update(self, time_index: int, **kwargs: Any) -> None:
+        """Function to update the model.
+
+        Args:
+            time_index: The index representing the current time step in the data object.
+        """
+
+    def _update_static(self, time_index: int, **kwargs: Any) -> None:
+        """Function to update the model in the static case.
+
+        Args:
+            time_index: The index representing the current time step in the data object.
+        """
+        if self._static_data is None:
+            self._update(time_index, **kwargs)
+            self._build_static_data(time_index)
+            return
+
+        self._update_with_static_data(time_index)
+
+    def _build_static_data(self, time_index: int) -> None:
+        """Populates the static data attribute with the data for time index.
+
+        It extracts :attr:`~virtual_rainforest.core.base_model.BaseModel.vars_updated`
+        from :attr:`~virtual_rainforest.core.base_model.BaseModel.data` at `time_index`
+        to create :attr:`~virtual_rainforest.core.base_model.BaseModel._static_data`,
+        which then is used at any future times.
+
+        Args:
+            time_index: The index representing the current time step in the data object.
+        """
+
+    def _update_with_static_data(self, time_index: int) -> None:
+        """Updates data object with with static data at time_index.
+
+        It updates :attr:`~virtual_rainforest.core.base_model.BaseModel.data` with the
+        :attr:`~virtual_rainforest.core.base_model.BaseModel._static_data` at
+        `time_index`.
 
         Args:
             time_index: The index representing the current time step in the data object.
