@@ -256,7 +256,7 @@ class AbioticModel(
 
         wind_update = wind.calculate_wind_profile(
             canopy_height=self.data["canopy_height"].to_numpy(),
-            wind_height_above=(self.data["canopy_height"] + 15).to_numpy(),
+            wind_height_above=self.data["layer_heights"].to_numpy()[0],
             wind_layer_heights=wind_update_inputs["layer_heights"].to_numpy(),
             leaf_area_index=wind_update_inputs["leaf_area_index"].to_numpy(),
             air_temperature=wind_update_inputs["air_temperature"].to_numpy(),
@@ -267,20 +267,16 @@ class AbioticModel(
             wind_speed_ref=(
                 self.data["wind_speed_ref"].isel(time_index=time_index).to_numpy()
             ),
-            wind_reference_height=(self.data["canopy_height"] + 10).to_numpy(),
+            wind_reference_height=(
+                self.data["canopy_height"] + self.model_constants.wind_reference_height
+            ).to_numpy(),
             abiotic_constants=self.model_constants,
             core_constants=self.core_constants,
-        )  # TODO wind height above in constants, cross-check with reference heights
+        )
 
         wind_output = {}
-        wind_speed_above_canopy = DataArray(
-            wind_update["wind_speed_above_canopy"],
-            dims="cell_id",
-            coords={"cell_id": self.data.grid.cell_id},
-        )
-        wind_output["wind_speed_above_canopy"] = wind_speed_above_canopy
 
-        for var in ["wind_speed_canopy", "friction_velocity"]:
+        for var in ["wind_speed", "friction_velocity"]:
             # Might make sense to store the shape and use np.full(shape, np.nan)
             var_data = np.full_like(self.data["leaf_area_index"], np.nan)
             var_data[true_aboveground_rows, :] = wind_update[var]

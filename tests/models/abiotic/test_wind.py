@@ -399,14 +399,9 @@ def test_calculate_wind_profile(dummy_climate_data):
         ]
     )
 
-    wind_above_exp = np.array([0.109341, 5.536364, 11.07365])
-
-    np.testing.assert_allclose(
-        wind_update["wind_speed_above_canopy"], wind_above_exp, rtol=1e-3, atol=1e-3
-    )
     np.testing.assert_allclose(
         wind_update["friction_velocity"], friction_velocity_exp, rtol=1e-3, atol=1e-3
     )
     np.testing.assert_allclose(
-        wind_update["wind_speed_canopy"], wind_speed_exp, rtol=1e-3, atol=1e-3
+        wind_update["wind_speed"], wind_speed_exp, rtol=1e-3, atol=1e-3
     )

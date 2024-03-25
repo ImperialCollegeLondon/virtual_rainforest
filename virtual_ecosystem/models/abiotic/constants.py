@@ -14,6 +14,13 @@ from virtual_ecosystem.core.constants_class import ConstantsDataclass
 class AbioticConsts(ConstantsDataclass):
     """Dataclass to store all constants for the `abiotic` model."""
 
+    wind_reference_height: float = 10.0
+    """Reference height for wind speed above the canopy.
+    The reference height for horizontal wind is typically 10m above ground compared to
+    2m for other atmospheric variables such as temperature and relative humidity. We
+    assume here that the reference height is above the canopy, please check the input
+    data carefully and be aware of limitations."""
+
     specific_heat_equ_factors: list[float] = field(
         default_factory=lambda: [2e-05, 0.0002]
     )

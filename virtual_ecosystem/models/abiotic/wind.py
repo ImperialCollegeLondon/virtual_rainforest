@@ -510,8 +510,7 @@ def calculate_wind_profile(
         core_constants: Universal constants shared across all models
 
     Returns:
-        dictionnary that contains wind speed above the canopy, [m s-1], wind speed
-        within and below the canopy, [m s-1], and friction velocity, [m s-1]
+        dictionnary that contains wind speed and friction velocity, [m s-1]
     """
 
     output = {}
@@ -628,7 +627,6 @@ def calculate_wind_profile(
         von_karmans_constant=core_constants.von_karmans_constant,
         min_wind_speed_above_canopy=abiotic_constants.min_wind_speed_above_canopy,
     )
-    output["wind_speed_above_canopy"] = wind_speed_above_canopy
 
     wind_speed_canopy = calculate_wind_canopy(
         top_of_canopy_wind_speed=wind_speed_above_canopy,
@@ -636,6 +634,6 @@ def calculate_wind_profile(
         canopy_height=canopy_height,
         attenuation_coefficient=attennuation_coefficient,
     )
-    output["wind_speed_canopy"] = wind_speed_canopy
+    output["wind_speed"] = wind_speed_canopy
 
     return output

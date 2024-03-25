@@ -373,19 +373,14 @@ def test_update_abiotic_model(dummy_climate_data, cfg_string):
 
     wind_speed_exp = np.full((15, 3), np.nan)
     wind_speed_exp[[0, 1, 2, 3, 11, 12], :] = [
-        [1.106333, 1.10686, 1.107273],
-        [1.097423, 1.097945, 1.098355],
-        [1.050605, 1.051105, 1.051498],
-        [0.961219, 0.961676, 0.962035],
-        [0.910395, 0.910828, 0.911168],
-        [0.902285, 0.902714, 0.903051],
+        [0.628988, 0.627151, 0.625709],
+        [0.623922, 0.6221, 0.62067],
+        [0.597305, 0.595561, 0.594191],
+        [0.546485, 0.54489, 0.543637],
+        [0.51759, 0.516079, 0.514892],
+        [0.512979, 0.511482, 0.510306],
     ]
 
-    wind_above_exp = np.array([1.106333, 1.10686, 1.107273])
-
-    np.testing.assert_allclose(
-        model.data["wind_speed_above_canopy"], wind_above_exp, rtol=1e-3, atol=1e-3
-    )
     np.testing.assert_allclose(
         model.data["friction_velocity"],
         DataArray(friction_velocity_exp),
@@ -393,7 +388,7 @@ def test_update_abiotic_model(dummy_climate_data, cfg_string):
         atol=1e-3,
     )
     np.testing.assert_allclose(
-        model.data["wind_speed_canopy"],
+        model.data["wind_speed"],
         DataArray(wind_speed_exp),
         rtol=1e-3,
         atol=1e-3,
@@ -419,7 +414,12 @@ def test_update_abiotic_model(dummy_climate_data, cfg_string):
     exp_gv = DataArray(
         np.concatenate(
             [
-                [[np.nan] * 3, [0.203513] * 3, [0.202959] * 3, [0.202009] * 3],
+                [[np.nan, np.nan, np.nan]],
+                [
+                    [0.49832, 0.497616, 0.497063],
+                    [0.48725, 0.486561, 0.486019],
+                    [0.465613, 0.464953, 0.464435],
+                ],
                 [[np.nan, np.nan, np.nan]] * 11,
             ],
         ),
