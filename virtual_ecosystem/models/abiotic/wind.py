@@ -201,6 +201,71 @@ def calculate_diabatic_correction_above(
     return {"psi_m": diabatic_correction_momentum, "psi_h": diabatic_correction_heat}
 
 
+def calculate_diabatic_correction_canopy(
+    air_temperature: NDArray[np.float32],
+    wind_speed: NDArray[np.float32],
+    layer_heights: NDArray[np.float32],
+    mean_mixing_length: NDArray[np.float32],
+    gravity: float,
+) -> dict[str, NDArray[np.float32]]:
+    """Calculate diabatic correction factors in canopy.
+
+    This function calculates the diabatic correction factors for heat and momentum used
+    in adjustment of wind profiles and calculation of turbulent conductivity within the
+    canopy. Implementation after :cite:t:`maclean_microclimc_2021`.
+
+    Args:
+        air_temperature: Air temperature, [C]
+        wind_speed: Wind speed, [m s-1]
+        layer_heights: Layer heights, [m]
+        mean_mixing_length: Mean mixing length, [m]
+        gravity: Gravity constant
+
+    Returns:
+        `phi_m` diabatic correction factor for momentum transfer
+        `phi_h` diabatic correction factor for heat transfer
+    """
+
+    # Calculate differences between consecutive elements along the vertical axis
+    temperature_differences = np.diff(air_temperature, axis=0)
+    height_differences = np.diff(layer_heights, axis=0)
+    temperature_gradient = temperature_differences / height_differences
+
+    # Calculate mean temperature in Kelvin and mean PAI along the vertical axis
+    mean_temperature_kelvin = np.mean(air_temperature, axis=0) + 273.15
+    mean_wind_speed = np.mean(wind_speed, axis=0)
+
+    # Calculate Richardson number (Ri)
+    Ri = (
+        (gravity / mean_temperature_kelvin)
+        * temperature_gradient
+        * (mean_mixing_length / mean_wind_speed) ** 2
+    )
+    Ri[Ri > 0.15] = 0.15
+    Ri[Ri <= -0.1120323] = -0.112032
+
+    # Calculate stability term (st)
+    stability_term = (0.74 * (1 + 8.926 * Ri) ** 0.5 + 2 * 4.7 * Ri - 0.74) / (
+        2 * 4.7 * (1 - 4.7 * Ri)
+    )
+    sel = np.where(temperature_gradient <= 0)  # Unstable conditions
+    stability_term[sel] = Ri[sel]
+
+    # Initialize phi_m and phi_h with values for stable conditions
+    phi_m = 1 + (6 * stability_term) / (1 + stability_term)
+    phi_h = phi_m.copy()
+
+    # Adjust for unstable conditions
+    phi_m[sel] = 1 / (1 - 16 * stability_term[sel]) ** 0.25
+    phi_h[sel] = phi_m[sel] ** 2
+
+    # Calculate mean values across the vertical axis for phi_m and phi_h
+    phi_m_mean = np.mean(phi_m, axis=0)
+    phi_h_mean = np.mean(phi_h, axis=0)
+
+    return {"phi_m": phi_m_mean, "phi_h": phi_h_mean}
+
+
 def calculate_mean_mixing_length(
     canopy_height: NDArray[np.float32],
     zero_plane_displacement: NDArray[np.float32],

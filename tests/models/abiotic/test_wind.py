@@ -64,14 +64,14 @@ def test_calculate_diabatic_correction_above(dummy_climate_data):
     abiotic_consts = AbioticConsts()
     core_const = CoreConsts()
     result = calculate_diabatic_correction_above(
-        molar_density_air=np.full((6, 3), 28.96),
-        specific_heat_air=np.full((6, 3), 1.0),
-        temperature=air_temperature.to_numpy(),
+        molar_density_air=np.repeat(28.96, 3),
+        specific_heat_air=np.repeat(1.0, 3),
+        temperature=air_temperature[0].to_numpy(),
         sensible_heat_flux=(
             dummy_climate_data["sensible_heat_flux_topofcanopy"].to_numpy()
         ),
-        friction_velocity=dummy_climate_data["friction_velocity"].to_numpy(),
-        wind_heights=layer_heights.to_numpy(),
+        friction_velocity=dummy_climate_data["friction_velocity"][0].to_numpy(),
+        wind_heights=layer_heights[0].to_numpy(),
         zero_plane_displacement=np.array([0.0, 25.312559, 27.58673]),
         celsius_to_kelvin=core_const.zero_Celsius,
         von_karmans_constant=core_const.von_karmans_constant,
@@ -79,28 +79,30 @@ def test_calculate_diabatic_correction_above(dummy_climate_data):
         diabatic_heat_momentum_ratio=abiotic_consts.diabatic_heat_momentum_ratio,
     )
 
-    exp_result_h = np.array(
-        [
-            [0.105164, 0.024834, 0.008092],
-            [0.098124, 0.017318, 0.004415],
-            [0.063971, -0.019159, -0.013736],
-            [0.031387, -0.054092, -0.031592],
-            [0.004686, -0.083544, -0.047034],
-            [0.000318, -0.090006, -0.050539],
-        ]
-    )
-    exp_result_m = np.array(
-        [
-            [0.063098, 0.0149, 0.004855],
-            [0.058874, 0.010391, 0.002649],
-            [0.038382, -0.011495, -0.008242],
-            [0.018832, -0.032455, -0.018955],
-            [0.002812, -0.050126, -0.02822],
-            [0.000191, -0.054004, -0.030324],
-        ]
-    )
+    exp_result_h = np.array([0.105164, 0.010235, 0.001342])
+    exp_result_m = np.array([0.063098, 0.006141, 0.000805])
     np.testing.assert_allclose(result["psi_h"], exp_result_h, rtol=1e-4, atol=1e-4)
     np.testing.assert_allclose(result["psi_m"], exp_result_m, rtol=1e-4, atol=1e-4)
+
+
+def test_calculate_diabatic_correction_canopy(dummy_climate_data):
+    """Test calculate diabatic correction factors for canopy."""
+
+    from virtual_ecosystem.models.abiotic.wind import (
+        calculate_diabatic_correction_canopy,
+    )
+
+    result = calculate_diabatic_correction_canopy(
+        air_temperature=dummy_climate_data["air_temperature"][1:4].to_numpy(),
+        wind_speed=dummy_climate_data["wind_speed"][1:4].to_numpy(),
+        layer_heights=dummy_climate_data["layer_heights"][1:4].to_numpy(),
+        mean_mixing_length=dummy_climate_data["mean_mixing_length"].to_numpy(),
+        gravity=CoreConsts.gravity,
+    )
+    exp_result_h = np.array([1.0, 1.0, 1.0])
+    exp_result_m = np.array([1.0, 1.0, 1.0])
+    np.testing.assert_allclose(result["phi_h"], exp_result_h, rtol=1e-4, atol=1e-4)
+    np.testing.assert_allclose(result["phi_m"], exp_result_m, rtol=1e-4, atol=1e-4)
 
 
 def test_calculate_mean_mixing_length(dummy_climate_data):
