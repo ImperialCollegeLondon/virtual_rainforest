@@ -606,21 +606,25 @@ def dummy_climate_data(fixture_core_components):
         coords=full_coordinates,
     )
     data["zero_displacement_height"] = DataArray(np.repeat(20.0, 3), dims="cell_id")
-    diabatic_corr_heat = np.repeat(a=[0.01, np.nan, 0.01, np.nan], repeats=[4, 7, 2, 2])
-    data["diabatic_correction_heat"] = DataArray(
-        np.broadcast_to(diabatic_corr_heat, (3, 15)).T,
-        dims=["layers", "cell_id"],
-        name="diabatic_correction_heat",
-        coords=full_coordinates,
+    data["diabatic_correction_heat_above"] = DataArray(
+        np.repeat(0.1, 3),
+        dims=["cell_id"],
+        name="diabatic_correction_heat_above",
     )
-    diabatic_corr_momentum = np.repeat(
-        a=[0.03, np.nan, 0.03, np.nan], repeats=[4, 7, 2, 2]
+    data["diabatic_correction_heat_canopy"] = DataArray(
+        np.repeat(1.0, 3),
+        dims=["cell_id"],
+        name="diabatic_correction_heat_canopy",
     )
-    data["diabatic_correction_momentum"] = DataArray(
-        np.broadcast_to(diabatic_corr_momentum, (3, 15)).T,
-        dims=["layers", "cell_id"],
-        name="diabatic_correction_momentum",
-        coords=full_coordinates,
+    data["diabatic_correction_momentum_above"] = DataArray(
+        np.repeat(0.1, 3),
+        dims=["cell_id"],
+        name="diabatic_correction_momentum_above",
+    )
+    data["diabatic_correction_momentum_canopy"] = DataArray(
+        np.repeat(1.0, 3),
+        dims=["cell_id"],
+        name="diabatic_correction_momentum_canopy",
     )
     attenuation_coefficient = np.repeat(
         a=[13.0, np.nan, 2.0, np.nan], repeats=[4, 7, 2, 2]

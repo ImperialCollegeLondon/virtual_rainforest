@@ -633,13 +633,13 @@ def calculate_leaf_and_air_temperature(
     sensible_heat_flux_canopy = b_H * delta_canopy_temperature
     sensible_heat_flux[topsoil_layer_index] = data["sensible_heat_flux_soil"]
     sensible_heat_flux[true_canopy_indexes] = sensible_heat_flux_canopy
-    output["sensible_heat_flux_canopy"] = sensible_heat_flux
+    output["sensible_heat_flux"] = sensible_heat_flux
 
     latent_heat_flux = data["latent_heat_flux"].copy()
     latent_heat_flux_canopy = a_L + b_L * delta_canopy_temperature
     latent_heat_flux[topsoil_layer_index] = data["latent_heat_flux_soil"]
     latent_heat_flux[true_canopy_indexes] = latent_heat_flux_canopy
-    output["latent_heat_flux_canopy"] = latent_heat_flux
+    output["latent_heat_flux"] = latent_heat_flux
 
     return output
 

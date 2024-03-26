@@ -380,30 +380,30 @@ def test_calculate_wind_profile(dummy_climate_data):
         core_constants=CoreConsts(),
     )
 
-    friction_velocity_exp = np.array(
-        [
-            [0.014257, 0.818637, 1.638679],
-            [0.01508, 0.81887, 1.638726],
-            [0.017479, 0.820036, 1.638959],
-            [0.019081, 0.821194, 1.639192],
-            [0.02021, 0.822174, 1.63939],
-            [0.020383, 0.822336, 1.639422],
-        ],
-    )
+    friction_velocity_exp = np.array([0.014257, 0.818637, 1.638679])
     wind_speed_exp = np.array(
         [
-            [0.109341, 5.536364, 11.07365],
-            [0.10846, 5.491774, 10.984462],
-            [0.103833, 5.257489, 10.515853],
-            [0.094999, 4.810177, 9.621155],
-            [0.089976, 4.555839, 9.112435],
-            [0.089175, 4.515257, 9.031265],
+            [0.109341, 6.278346, 12.567473],
+            [0.10846, 6.227779, 12.466253],
+            [0.103833, 5.962095, 11.934429],
+            [0.094999, 5.454835, 10.919038],
+            [0.089976, 5.16641, 10.341693],
+            [0.089175, 5.12039, 10.249573],
         ]
     )
+
+    psi_h_exp = np.array([6.081216e-01, 3.880146e-03, 3.869994e-04])
+    phi_h_exp = np.array([1.0, 1.0, 1.0])
 
     np.testing.assert_allclose(
         wind_update["friction_velocity"], friction_velocity_exp, rtol=1e-3, atol=1e-3
     )
     np.testing.assert_allclose(
         wind_update["wind_speed"], wind_speed_exp, rtol=1e-3, atol=1e-3
+    )
+    np.testing.assert_allclose(
+        wind_update["diabatic_correction_heat_above"], psi_h_exp, rtol=1e-3, atol=1e-3
+    )
+    np.testing.assert_allclose(
+        wind_update["diabatic_correction_heat_canopy"], phi_h_exp, rtol=1e-3, atol=1e-3
     )

@@ -635,18 +635,20 @@ def calculate_wind_profile(
 
     # TODO select above layer (psi) and add function for factor below canopy (phi)
     diabatic_correction_above = calculate_diabatic_correction_above(
-        molar_density_air=molar_density_air,
-        specific_heat_air=specific_heat_air,
-        temperature=air_temperature,
+        molar_density_air=molar_density_air[0],
+        specific_heat_air=specific_heat_air[0],
+        temperature=air_temperature[0],
         sensible_heat_flux=sensible_heat_flux_topofcanopy,
         friction_velocity=friction_velocity_uncorrected,
-        wind_heights=wind_layer_heights,
+        wind_heights=wind_layer_heights[0],
         zero_plane_displacement=zero_plane_displacement,
         celsius_to_kelvin=core_constants.zero_Celsius,
         von_karmans_constant=core_constants.von_karmans_constant,
         yasuda_stability_parameters=abiotic_constants.yasuda_stability_parameters,
         diabatic_heat_momentum_ratio=abiotic_constants.diabatic_heat_momentum_ratio,
     )
+    output["diabatic_correction_heat_above"] = diabatic_correction_above["psi_h"]
+    output["diabatic_correction_momentum_above"] = diabatic_correction_above["psi_m"]
 
     friction_velocity = calculate_friction_velocity(
         wind_speed_ref=wind_speed_ref,
@@ -684,7 +686,7 @@ def calculate_wind_profile(
         relative_turbulence_intensity=relative_turbulence_intensity,
     )
     wind_speed_above_canopy = calculate_wind_above_canopy(
-        friction_velocity=friction_velocity[0],
+        friction_velocity=friction_velocity,
         wind_height_above=wind_height_above,
         zeroplane_displacement=zero_plane_displacement,
         roughness_length_momentum=roughness_length_momentum,
@@ -700,5 +702,17 @@ def calculate_wind_profile(
         attenuation_coefficient=attennuation_coefficient,
     )
     output["wind_speed"] = wind_speed_canopy
+
+    diabatic_correction_canopy = calculate_diabatic_correction_canopy(
+        air_temperature=air_temperature,
+        wind_speed=wind_speed_canopy,
+        layer_heights=wind_layer_heights,
+        mean_mixing_length=mean_mixing_length,
+        gravity=core_constants.gravity,
+    )
+    # set above canopy layer to nan
+    # diabatic_correction_canopy
+    output["diabatic_correction_heat_canopy"] = diabatic_correction_canopy["phi_h"]
+    output["diabatic_correction_momentum_canopy"] = diabatic_correction_canopy["phi_m"]
 
     return output

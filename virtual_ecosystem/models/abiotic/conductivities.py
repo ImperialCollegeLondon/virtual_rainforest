@@ -217,13 +217,13 @@ def calculate_air_heat_conductivity_canopy(
 
     .. math::
         g_{t} = \frac{u_{h}l_{m}i_{w}a}
-        {(exp(\frac{-a_{z_{0}}}{h-1}) - exp(\frac{-a_{z_{1}}}{h-1})) \Psi_{H}}
+        {(exp(\frac{-a_{z_{0}}}{h-1}) - exp(\frac{-a_{z_{1}}}{h-1})) \Phi_{H}}
 
 
     where :math:`u_{h}` is wind speed at the top of the canopy at height :math:`h`,
     :math:`a` is a wind attenuation coefficient, :math:`i_{w}` is a coefficient
     describing relative turbulence intensity, :math:`l_{m}` is the mean mixing length,
-    equivalent to the free space between the leaves and stems, and :math:`\Psi_{H}` is a
+    equivalent to the free space between the leaves and stems, and :math:`\Phi_{H}` is a
     within-canopy diabatic correction factor for heat.
 
     TODO better tests for different conditions
@@ -391,8 +391,8 @@ def calculate_current_conductivities(
 ) -> dict[str, NDArray[np.float32]]:
     """Calculate conductivities based on current reference data.
 
-    This function calculated the conductivites for heat and vapour between air layers
-    and the leaf and surroundling atmosphere for the current time step. The first value
+    This function calculates the conductivites for heat and vapour between air layers
+    and the leaf and surrounding atmosphere for the current time step. The first value
     on the vertical axis is 2m above the canopy, the second value corresponds to the top
     of the canopy.
 
@@ -409,7 +409,7 @@ def calculate_current_conductivities(
     * stomatal_conductance: Stomatal conductance, [mmol m-2 s-1]
     * zero_displacement_height: Zero displacement height, [m]
     * friction_velocity: Friction velocity
-    * adiabatic_correction_heat: Adiabatic correction for heat
+    * Diabatic_correction_heat: Diabatic correction for heat in canopy
 
     Args:
         characteristic_dimension_leaf: Chacteristic dimension of leaf, typically around
@@ -431,7 +431,7 @@ def calculate_current_conductivities(
         canopy_height=data["layer_heights"].isel(layers=1).to_numpy(),
         friction_velocity=data["friction_velocity"][0].to_numpy(),
         molar_density_air=data["molar_density_air"][0].to_numpy(),
-        diabatic_correction_heat=data["diabatic_correction_heat"][0].to_numpy(),
+        diabatic_correction_heat=data["diabatic_correction_heat_canopy"].to_numpy(),
         von_karmans_constant=von_karmans_constant,
     )
     current_air_heat_conductivity = []
@@ -447,7 +447,7 @@ def calculate_current_conductivities(
             ),
             top_of_canopy_wind_speed=data["wind_speed"].isel(layers=1).to_numpy(),
             diabatic_correction_momentum=(
-                data["diabatic_correction_momentum"][layer].to_numpy()
+                data["diabatic_correction_momentum_canopy"].to_numpy()
             ),
             canopy_height=data["layer_heights"].isel(layers=1).to_numpy(),
         )
@@ -471,7 +471,7 @@ def calculate_current_conductivities(
             ),
             top_of_canopy_wind_speed=data["wind_speed"].isel(layers=1).to_numpy(),
             diabatic_correction_momentum=(
-                data["diabatic_correction_momentum"][layer].to_numpy()
+                data["diabatic_correction_momentum_canopy"].to_numpy()
             ),
             canopy_height=data["layer_heights"].isel(layers=1).to_numpy(),
         )

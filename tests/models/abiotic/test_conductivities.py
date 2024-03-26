@@ -132,14 +132,16 @@ def test_calculate_air_heat_conductivity_above(dummy_climate_data):
             dummy_climate_data["zero_displacement_height"].to_numpy()
         ),
         canopy_height=dummy_climate_data["layer_heights"][1],
-        friction_velocity=dummy_climate_data["friction_velocity"][0].to_numpy(),
+        friction_velocity=dummy_climate_data["friction_velocity"].to_numpy(),
         molar_density_air=dummy_climate_data["molar_density_air"][0].to_numpy(),
         diabatic_correction_heat=(
-            dummy_climate_data["diabatic_correction_heat"][0].to_numpy()
+            dummy_climate_data["diabatic_correction_heat_above"].to_numpy()
         ),
         von_karmans_constant=CoreConsts.von_karmans_constant,
     )
-    np.testing.assert_allclose(result, np.repeat(705.63476, 3), rtol=1e-04, atol=1e-04)
+    np.testing.assert_allclose(
+        result, np.array([523.39996, 218.083317, 87.233327]), rtol=1e-04, atol=1e-04
+    )
 
 
 def test_calculate_air_heat_conductivity_canopy(dummy_climate_data):
@@ -162,11 +164,11 @@ def test_calculate_air_heat_conductivity_canopy(dummy_climate_data):
         ),
         top_of_canopy_wind_speed=np.repeat(1.0, 3),
         diabatic_correction_momentum=(
-            dummy_climate_data["diabatic_correction_momentum"][1].to_numpy()
+            dummy_climate_data["diabatic_correction_momentum_canopy"].to_numpy()
         ),
         canopy_height=dummy_climate_data["layer_heights"][1].to_numpy(),
     )
-    exp_result = np.repeat(7.899376, 3)
+    exp_result = np.repeat(0.236981, 3)
     np.testing.assert_allclose(result, exp_result, rtol=1e-04, atol=1e-04)
 
 
@@ -234,7 +236,7 @@ def test_calculate_current_conductivities(dummy_climate_data):
     )
 
     exp_gt = np.full((15, 3), np.nan)
-    gt_vals = [7.056348e02, 6.514515e04, 4.714156e02, 4.169318, 589.115653, 455.163607]
+    gt_vals = [1.46096e02, 1.95435e03, 1.414247e01, 0.125081, 17.67347, 13.654908]
     exp_gt.T[..., [0, 1, 2, 3, 12, 13]] = gt_vals
 
     exp_gv = np.full((15, 3), np.nan)
@@ -246,7 +248,7 @@ def test_calculate_current_conductivities(dummy_climate_data):
     exp_gha.T[..., [1, 2, 3]] = gha_vals
 
     exp_gtr = np.full((15, 3), np.nan)
-    gtr_vals = [6.514515e04, 4.678095e02, 4.114899, 59.602899, 20.156303]
+    gtr_vals = [1.954354e03, 1.403429e01, 0.123447, 1.788087, 0.604689]
     exp_gtr.T[..., [1, 2, 3, 12, 13]] = gtr_vals
 
     np.testing.assert_allclose(
