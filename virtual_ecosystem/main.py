@@ -12,6 +12,7 @@ from typing import Any
 
 from tqdm import tqdm
 
+from virtual_ecosystem.core import variables
 from virtual_ecosystem.core.config import Config
 from virtual_ecosystem.core.core_components import CoreComponents
 from virtual_ecosystem.core.data import Data, merge_continuous_data_files
@@ -173,6 +174,7 @@ def ve_run(
     if progress:
         print("* Loading configuration")
 
+    variables.register_all_variables()
     config = Config(
         cfg_paths=cfg_paths, cfg_strings=cfg_strings, override_params=override_params
     )
@@ -195,6 +197,14 @@ def ve_run(
     data.load_data_config(config)
     if progress:
         print("* Initial data loaded")
+
+    # Setup the variables for the requested modules and verify consistency
+    variables.setup_variables(
+        list(config.model_classes.values()), list(data.data.keys())
+    )
+
+    # Verify that all variables have the correct axis
+    variables.verify_variables_axis()
 
     LOGGER.info("All models found in the registry, now attempting to configure them.")
 

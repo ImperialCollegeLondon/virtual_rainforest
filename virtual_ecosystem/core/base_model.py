@@ -166,8 +166,24 @@ class BaseModel(ABC):
 
     At the moment, this tuple is used to decide which variables to output from the
     :class:`~virtual_ecosystem.core.data.Data` object, i.e. every variable updated
-    by a model used in the specific simulation. In future, this could also be used
-    to prevent multiple models from updating the same variable and similar problems.
+    by a model used in the specific simulation. It is also be used warn if multiple
+    models will be updating the same variable and to verify that these variables are
+    indeed initialised by another model, and therefore will be available.
+    """
+
+    required_update_vars: tuple[str, ...]
+    """Variables that are required by the update method of the model.
+
+    These variables should have been initialised by another model or loaded from
+    external sources, but in either case they will be available in the data object.
+    """
+
+    vars_initialised: tuple[str, ...]
+    """Variables that are initialised by the model.
+
+    These are the variables that are initialised by the model and stored in the data
+    object when running the setup method and that will be available for other models to
+    use in their own setup or update methods.
     """
 
     def __init__(
