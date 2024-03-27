@@ -163,7 +163,7 @@ def herbivore_cohort_instance(herbivore_functional_group_instance, constants_ins
 
 
 @pytest.fixture
-def excrement_instance():
+def excrement_pool_instance():
     """Fixture for a soil pool used in tests."""
     from virtual_ecosystem.models.animals.decay import ExcrementPool
 
@@ -178,3 +178,39 @@ def plant_instance(plant_data_instance, constants_instance):
     return PlantResources(
         data=plant_data_instance, cell_id=4, constants=constants_instance
     )
+
+
+@pytest.fixture
+def plant_list_instance(plant_data_instance, constants_instance):
+    """Fixture providing a list of plant resources."""
+    from virtual_ecosystem.models.animals.plant_resources import PlantResources
+
+    return [
+        PlantResources(
+            data=plant_data_instance, cell_id=4, constants=constants_instance
+        ),
+        PlantResources(
+            data=plant_data_instance, cell_id=4, constants=constants_instance
+        ),
+        PlantResources(
+            data=plant_data_instance, cell_id=4, constants=constants_instance
+        ),
+    ]
+
+
+@pytest.fixture
+def animal_list_instance(herbivore_functional_group_instance, constants_instance):
+    """Fixture providing a list of animal cohorts."""
+    from virtual_ecosystem.models.animals.animal_cohorts import AnimalCohort
+
+    return [
+        AnimalCohort(
+            herbivore_functional_group_instance, 10000.0, 1, 10, constants_instance
+        ),
+        AnimalCohort(
+            herbivore_functional_group_instance, 10000.0, 1, 10, constants_instance
+        ),
+        AnimalCohort(
+            herbivore_functional_group_instance, 10000.0, 1, 10, constants_instance
+        ),
+    ]

@@ -48,42 +48,46 @@ class PlantResources:
         self.is_alive: bool = True
         """Whether the cohort is alive [True] or dead [False]."""
 
-    def get_eaten(self, herbivore: Consumer, excrement_pool: DecayPool) -> float:
-        """This function removes energy from a PlantResources and through herbivory.
+    def get_eaten(
+        self, consumed_mass: float, herbivore: Consumer, excrement_pool: DecayPool
+    ) -> float:
+        """This function handles herbivory on PlantResources.
+
+        TODO: plant waste should flow to a litter pool of some kind
 
         Args:
-            herbivore: The AnimalCohort preying on the PlantResources
-            excrement_pool: The resident pool of detritus to which the remains of excess
-                plant material is lost.
+            consumed_mass: The mass intended to be consumed by the herbivore.
+            herbivore: The Consumer (AnimalCohort) consuming the PlantResources.
+            excrement_pool: The pool to which remains of uneaten plant material is added
 
         Returns:
-            A float of the energy value of the consumed plants after mechanical and
-            digestive efficiencies are accounted for.
-
+            The actual mass consumed by the herbivore, adjusted for efficiencies.
         """
+        # Check if the requested consumed mass is more than the available mass
+        actual_consumed_mass = min(self.mass_current, consumed_mass)
 
-        # Minimum of the energy available and amount that can be consumed in an 8 hour
-        # foraging window .
-        mass_consumed = min(
-            self.mass_current,
-            herbivore.intake_rate * herbivore.individuals,
+        # Update the plant mass to reflect the mass consumed
+        self.mass_current -= actual_consumed_mass
+
+        # Calculate the energy value of the consumed plants after mechanical efficiency
+        effective_mass_for_herbivore = (
+            actual_consumed_mass * herbivore.functional_group.mechanical_efficiency
         )
 
-        # TODO - this needs to feedback herbivory to into the data object and hence back
-        # into the plant model, but for now, the energy is consumed and not lost from
-        # plants.
-        self.mass_current -= mass_consumed
-
-        # TODO - All plant matter that animals fail to eat currently goes into the
-        # excrement pool. This isn't ideal, but will do for now. This herbivore
-        # contribution to litter fall should be handled by the plant model in future.
-        excrement_pool.decomposed_energy += mass_consumed * (
+        # Excess mass goes to the excrement pool, considering only the part not
+        # converted by mechanical efficiency
+        excess_mass = actual_consumed_mass * (
             1 - herbivore.functional_group.mechanical_efficiency
         )
-
-        # Return the net mass gain of herbivory
-        return (
-            mass_consumed
-            * herbivore.functional_group.conversion_efficiency
-            * herbivore.functional_group.mechanical_efficiency
+        excrement_pool.decomposed_energy += (
+            excess_mass * self.constants.energy_density["plant"]
         )
+
+        # Return the net mass gain of herbivory, considering both mechanical and
+        # digestive efficiencies
+        net_mass_gain = (
+            effective_mass_for_herbivore
+            * herbivore.functional_group.conversion_efficiency
+        )
+
+        return net_mass_gain
