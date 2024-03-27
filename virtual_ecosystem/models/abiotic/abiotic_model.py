@@ -255,14 +255,14 @@ class AbioticModel(
             wind_update_inputs[var] = selection
 
         wind_update = wind.calculate_wind_profile(
-            canopy_height=self.data["canopy_height"].to_numpy(),
+            canopy_height=self.data["layer_heights"][1].to_numpy(),
             wind_height_above=self.data["layer_heights"].to_numpy()[0],
             wind_layer_heights=wind_update_inputs["layer_heights"].to_numpy(),
             leaf_area_index=wind_update_inputs["leaf_area_index"].to_numpy(),
             air_temperature=wind_update_inputs["air_temperature"].to_numpy(),
             atmospheric_pressure=self.data["atmospheric_pressure"].to_numpy()[0],
             sensible_heat_flux_topofcanopy=(
-                self.data["sensible_heat_flux_topofcanopy"].to_numpy()
+                self.data["sensible_heat_flux"][1].to_numpy()
             ),
             wind_speed_ref=(
                 self.data["wind_speed_ref"].isel(time_index=time_index).to_numpy()

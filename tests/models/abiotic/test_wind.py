@@ -51,27 +51,17 @@ def test_calculate_diabatic_correction_above(dummy_climate_data):
         calculate_diabatic_correction_above,
     )
 
-    air_temperature = (
-        dummy_climate_data["air_temperature"]
-        .where(dummy_climate_data["air_temperature"].layer_roles != "soil")
-        .dropna(dim="layers")
-    )
-    layer_heights = (
-        dummy_climate_data["layer_heights"]
-        .where(dummy_climate_data["layer_heights"].layer_roles != "soil")
-        .dropna(dim="layers")
-    )
     abiotic_consts = AbioticConsts()
     core_const = CoreConsts()
     result = calculate_diabatic_correction_above(
         molar_density_air=np.repeat(28.96, 3),
         specific_heat_air=np.repeat(1.0, 3),
-        temperature=air_temperature[0].to_numpy(),
+        temperature=dummy_climate_data["air_temperature"][0].to_numpy(),
         sensible_heat_flux=(
             dummy_climate_data["sensible_heat_flux_topofcanopy"].to_numpy()
         ),
         friction_velocity=dummy_climate_data["friction_velocity"][0].to_numpy(),
-        wind_heights=layer_heights[0].to_numpy(),
+        wind_heights=dummy_climate_data["layer_heights"][0].to_numpy(),
         zero_plane_displacement=np.array([0.0, 25.312559, 27.58673]),
         celsius_to_kelvin=core_const.zero_Celsius,
         von_karmans_constant=core_const.von_karmans_constant,
@@ -179,11 +169,12 @@ def test_calculate_wind_attenuation_coefficient(dummy_climate_data):
         calculate_wind_attenuation_coefficient,
     )
 
-    leaf_area_index = (
-        dummy_climate_data.data["leaf_area_index"]
-        .where(dummy_climate_data.data["leaf_area_index"].layer_roles != "soil")
-        .dropna(dim="layers")
-    )
+    # leaf_area_index = (
+    #     dummy_climate_data.data["leaf_area_index"]
+    #     .where(dummy_climate_data.data["leaf_area_index"].layer_roles != "soil")
+    #     .dropna(dim="layers")
+    # )
+    leaf_area_index = np.array([[1, 1, 1], [1.0, 1, np.nan], [1.0, np.nan, np.nan]])
     relative_turbulence_intensity = np.array(
         [
             [17.64, 17.64, 17.64],
@@ -204,12 +195,12 @@ def test_calculate_wind_attenuation_coefficient(dummy_climate_data):
 
     exp_result = np.array(
         [
-            [0, 0, 0],
+            [0.0, 0.0, 0.0],
             [0.133579, 0.129392, 0.196066],
-            [0.142291, 0.137831, 0.208853],
-            [0.211141, 0.204523, 0.309744],
-            [0.211141, 0.204523, 0.309744],
-            [0.211141, 0.204523, 0.309744],
+            [0.142291, 0.137831, 0.0],
+            [0.211141, 0.0, 0.0],
+            [0.211141, 0.0, 0.0],
+            [0.211141, 0.0, 0.0],
         ]
     )
     np.testing.assert_allclose(result, exp_result, rtol=1e-3, atol=1e-3)
@@ -225,53 +216,37 @@ def test_wind_log_profile(dummy_climate_data):
         .where(dummy_climate_data.data["layer_heights"].layer_roles != "soil")
         .dropna(dim="layers")
     )
-    diab_correction = np.array(
-        [
-            [0.105164, 0.024834, 0.008092],
-            [0.098124, 0.017318, 0.004415],
-            [0.063971, -0.019159, -0.013736],
-            [0.031387, -0.054092, -0.031592],
-            [0.004686, -0.083544, -0.047034],
-            [0.000318, -0.090006, -0.050539],
-        ]
-    )
     result = wind_log_profile(
         height=layer_heights.to_numpy(),
         zeroplane_displacement=np.array([0.0, 25.312559, 27.58673]),
         roughness_length_momentum=np.array([0.017, 1.4533, 0.9591]),
-        diabatic_correction_momentum=diab_correction,
+        diabatic_correction_momentum=np.array([1.0, 0.0, -1.0]),
+        min_wind_speed=0.001,
     )
 
     exp_result = np.array(
         [
-            [7.645442, 1.551228, 1.534468],
-            [7.573863, 1.188368, 0.927158],
-            [7.134245, np.nan, np.nan],
-            [6.408514, np.nan, np.nan],
-            [4.484693, np.nan, np.nan],
-            [1.772275, np.nan, np.nan],
+            [8.540278, 1.526394, 0.5263758],
+            [8.475739, 1.171050, 0.001],
+            [8.070274, 0.001, 0.001],
+            [7.377127, 0.001, 0.001],
+            [5.480007, 0.001, 0.001],
+            [2.771957, 0.001, 0.001],
         ]
     )
 
     np.testing.assert_allclose(result, exp_result, rtol=1e-3, atol=1e-3)
 
 
-def test_calculate_friction_velocity(dummy_climate_data):
+def test_calculate_friction_velocity_reference_height(dummy_climate_data):
     """Calculate friction velocity."""
 
-    from virtual_ecosystem.models.abiotic.wind import calculate_friction_velocity
-
-    diab_correction = np.array(
-        [
-            [2.559252e-03, 6.408841e-04, 2.114025e-04],
-            [2.400240e-03, 4.493814e-04, 1.156502e-04],
-            [1.604362e-03, -5.105855e-04, -3.646170e-04],
-            [0.000806, -0.001479, -0.00085],
-            [1.227214e-04, -2.333545e-03, -1.279214e-03],
-            [8.364645e-06, -2.525923e-03, -1.378067e-03],
-        ]
+    from virtual_ecosystem.models.abiotic.wind import (
+        calculate_friction_velocity_reference_height,
     )
-    result = calculate_friction_velocity(
+
+    diab_correction = np.array([-1.0, 0.0, 1])
+    result = calculate_friction_velocity_reference_height(
         wind_speed_ref=(
             dummy_climate_data.data["wind_speed_ref"].isel(time_index=0).to_numpy()
         ),
@@ -279,18 +254,10 @@ def test_calculate_friction_velocity(dummy_climate_data):
         zeroplane_displacement=np.array([0.0, 25.312559, 27.58673]),
         roughness_length_momentum=np.array([0.017, 1.4533, 0.9591]),
         diabatic_correction_momentum=diab_correction,
+        min_wind_speed=0.001,
         von_karmans_constant=CoreConsts.von_karmans_constant,
     )
-    exp_result = np.array(
-        [
-            [0.051185, 0.163836, 0.147595],
-            [0.051186, 0.163849, 0.1476],
-            [0.051191, 0.163914, 0.147626],
-            [0.051191, 0.163914, 0.147626],
-            [0.051185, 0.163836, 0.147595],
-            [0.051186, 0.163849, 0.1476],
-        ],
-    )
+    exp_result = np.array([0.058718, 0.163879, 0.107819])
     np.testing.assert_allclose(result, exp_result, rtol=1e-3, atol=1e-3)
 
 
@@ -338,6 +305,7 @@ def test_calculate_wind_canopy(dummy_climate_data):
         wind_layer_heights=layer_heights.to_numpy(),
         canopy_height=dummy_climate_data["canopy_height"].to_numpy(),
         attenuation_coefficient=attenuation_coeff,
+        min_wind_speed=0.001,
     )
 
     exp_result = np.array(
@@ -383,12 +351,12 @@ def test_calculate_wind_profile(dummy_climate_data):
     friction_velocity_exp = np.array([0.014257, 0.818637, 1.638679])
     wind_speed_exp = np.array(
         [
-            [0.109341, 6.278346, 12.567473],
-            [0.10846, 6.227779, 12.466253],
-            [0.103833, 5.962095, 11.934429],
-            [0.094999, 5.454835, 10.919038],
-            [0.089976, 5.16641, 10.341693],
-            [0.089175, 5.12039, 10.249573],
+            [0.109341, 5.536364, 11.07365],
+            [0.10846, 5.491774, 10.984462],
+            [0.103833, 5.257489, 10.515853],
+            [0.094999, 4.810177, 9.621155],
+            [0.089976, 4.555839, 9.112435],
+            [0.089175, 4.515257, 9.031265],
         ]
     )
 
